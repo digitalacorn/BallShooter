@@ -30,7 +30,7 @@ STATS = False
 ball_angle_prev = 0.
 ball_angle = 0.
 mouse_pos = PixelPos(0,0)
-bullets = []
+bullets = pygame.sprite.Group()
 Bullet.screen_size = SCREENSIZE
 Bullet.speed = BULLETSPEED
 Bullet.size = BULLETSIZE
@@ -92,16 +92,15 @@ while RUNNING:
             corr_pos = hp.CorrectedPos(mouse_pos)
             b = Bullet(ballBullet_scaled,corr_pos)
             b.rect.center = BULLETORIGIN
-            bullets.append(b)
+            bullets.add(b)
 
     ballHero = pygame.transform.rotate( ballHero_scaled, ball_angle )
     ballHero_rect = ballHero.get_rect()
     ballHero_rect.center = HEROORIGIN
     pygame.draw.circle(screen, CURSORCOLOUR, mouse_pos, CURSORRADIUS, 2) # red circle
     screen.blit(ballHero, ballHero_rect)
-    for b in bullets:
-        b.update(seconds)
-        screen.blit(b.image,b.rect)
+    bullets.update(seconds)
+    for b in bullets.sprites(): screen.blit(b.image,b.rect)
     if STATS:
         myFont = pygame.font.SysFont("None", FONTSIZE)
         screen.blit(myFont.render("FPS: %.2f" %fps, 0, LINECOLOUR), (10,10))
