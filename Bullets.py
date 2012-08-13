@@ -11,13 +11,38 @@ class Bullets(pygame.sprite.Group):
         self.CheckSpriteCollisions()
         pygame.sprite.Group.update(self,milliseconds)
     def CheckSpriteCollisions(self):
+        for sprite in self.sprites(): self.colliding = False
         for sprite1 in self.sprites():
             for sprite2 in self.sprites():
                 if sprite1!=sprite2:
-                    if pygame.sprite.collide_circle(sprite1, sprite2):
+                    diff_vec = self.AddVector(sprite1.pos,self.MultiplyVector(sprite2.pos,-1.))
+                    r = self.Magnitude(diff_vec)
+#                    if pygame.sprite.collide_circle(sprite1, sprite2):
+                    if r<(float(sprite1.radius)+float(sprite2.radius)):
                         sprite1.Collision(sprite2)
                     else: continue
                 else: continue
+
+    def Magnitude(self, vec):
+        square_sum=0.
+        root = 0
+        for x in vec:
+            square_sum+=math.pow(x,2)
+            root+=1
+        return math.pow(square_sum,1./root)
+
+    def AddVector(self,vec1,vec2):
+        add_vec = []
+        for element in zip(vec1,vec2):
+            add_vec.append(element[0]+element[1])
+        return add_vec
+
+    def MultiplyVector(self,vec,scale):
+        new_vec = []
+        for element in vec:
+            new_vec.append(element*scale)
+        return new_vec
+
 
 class Bullet(pygame.sprite.Sprite):
     screen_size = PixelSize(640,480)
@@ -34,8 +59,11 @@ class Bullet(pygame.sprite.Sprite):
         vx = scale * mouse_pos.x * Bullet.speed
         vy = -scale * mouse_pos.y * Bullet.speed
         self.velocity = [vx, vy]
+        self.collision_velocity = self.velocity
+        self.colliding = False
 
     def update(self, milliseconds):
+        if self.colliding: self.velocity = self.collision_velocity
         if self.rect.left < 0: 
             self.pos[0] = Bullet.size.w/2 
             self.velocity[0] = -self.velocity[0]
@@ -54,42 +82,51 @@ class Bullet(pygame.sprite.Sprite):
         self.pos[1] = self.pos[1]+dy
         self.rect.center = tuple(self.pos)
 
+    def Magnitude(self, vec):
+        square_sum=0.
+        root = 0
+        for x in vec:
+            square_sum+=math.pow(x,2)
+            root+=1
+        return math.pow(square_sum,1./root)
+
+    def DotProduct(self, vec1, vec2):
+        dot_prod = 0.
+        for element in zip(vec1,vec2):
+            dot_prod += element[0]*element[1]
+        return dot_prod
+
+    def AddVector(self,vec1,vec2):
+        add_vec = []
+        for element in zip(vec1,vec2):
+            add_vec.append(element[0]+element[1])
+        return add_vec
+
+    def MultiplyVector(self,vec,scale):
+        new_vec = []
+        for element in vec:
+            new_vec.append(element*scale)
+        return new_vec
+
     def Collision(self,other):
-        speed = math.sqrt(math.pow(self.velocity[0],2)+math.pow(self.velocity[1],2))
-        dx = other.pos[0]-self.pos[0]
-        dy = other.pos[1]-self.pos[1]
-        if dx > 0:
-            if dy > 0:
-                angle = math.degrees(math.atan(dy/dx))
-                vx = -speed*math.cos(math.radians(angle))
-                vy = -speed*math.sin(math.radians(angle))
-            elif dy < 0:
-                angle = math.degrees(math.atan(dy/dx))
-                vx = -speed*math.cos(math.radians(angle))
-                vy = -speed*math.sin(math.radians(angle))
-        elif dx < 0:
-            if dy > 0:
-                angle = 180 + math.degrees(math.atan(dy/dx))
-                vx = -speed*math.cos(math.radians(angle))
-                vy = -speed*math.sin(math.radians(angle))
-            elif dy < 0:
-                angle = -180 + math.degrees(math.atan(dy/dx))
-                vx = -speed*math.cos(math.radians(angle))
-                vy = -speed*math.sin(math.radians(angle))
-        elif dx == 0:
-            if dy > 0:
-                angle = -90
-            else:
-                angle = 90
-            vx = speed*math.cos(math.radians(angle))
-            vy = speed*math.sin(math.radians(angle))
-        elif dy == 0:
-            if dx < 0:
-                angle = 0
-            else:
-                angle = 180
-            vx = speed*math.cos(math.radians(angle))
-            vy = speed*math.sin(math.radians(angle))
-        self.velocity[0] = vx
-        self.velocity[1] = vy
+        self.colliding = True
+        dx = self.pos[0] - other.pos[0]
+        dy = self.pos[1] - other.pos[1]
+        n_scale = 1./self.Magnitude([dx,dy])
+        norm = (n_scale*dx,n_scale*dy)
+        neg_norm = self.MultiplyVector(norm,-1.)
+
+        v_self_dot = self.DotProduct(self.velocity,neg_norm)
+        v_other_dot = self.DotProduct(other.velocity,norm)
+        v_self = self.MultiplyVector(neg_norm,v_self_dot)
+        v_other = self.MultiplyVector(norm,v_other_dot)
+
+        v_self_tangent = self.AddVector(v_self,self.MultiplyVector(self.velocity,-1.))
+        v_other_tangent = self.AddVector(v_other,self.MultiplyVector(other.velocity,-1.))
+
+        self.collision_velocity = self.AddVector(v_self_tangent,v_other)
+#        other.velocity = self.AddVector(v_other_tangent,v_self)
+#        print "In Velocity 1 = ",self.velocity
+#        print "In Velocity 2 = ",other.velocity
+#        print "Out Velocity 1 = ",self.collision_velocity
 

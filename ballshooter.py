@@ -14,6 +14,7 @@ RGB = ntuple('RGB', 'r g b')
 
 # initialize some global varables with magic numbers
 SCREENSIZE = PixelSize(640, 480)
+#SCREENSIZE = PixelSize(200, 150)
 HEROSIZE = PixelSize(50,50)
 BULLETSIZE = PixelSize(20,20)
 CURSORRADIUS = BULLETSIZE.h/2
@@ -24,9 +25,11 @@ LINECOLOUR = RGB(20, 200, 20)
 CURSORCOLOUR = RGB(255, 0, 0)
 MAXFPS = 100
 FONTSIZE = 16
-BULLETSPEED = 0.25
+BULLETSPEED = 0.1
 STATS = False
 
+score = 0
+score_time = 0
 ball_angle_prev = 0.
 ball_angle = 0.
 mouse_pos = PixelPos(0,0)
@@ -65,6 +68,8 @@ while RUNNING:
     # limit the frame rate and calculate the real one
     milliseconds = clock.tick(MAXFPS)
     seconds = milliseconds / 1000.0 # seconds passed since last frame
+    score_time+=seconds
+    score+= score_time*math.pow(len(bullets.sprites()),2)
     fps = clock.get_fps()
     # clear the screen
     screen.fill(BKGCOLOUR)
@@ -89,6 +94,7 @@ while RUNNING:
             bulletmouse_pos = CorrectPos(mouse_pos,BULLETORIGIN)
             b = Bullet(ballBullet_scaled,BULLETORIGIN,bulletmouse_pos)
             bullets.add(b)
+            score_time=0
 
     ballHero = pygame.transform.rotate( ballHero_scaled, ball_angle )
     ballHero_rect = ballHero.get_rect()
@@ -98,8 +104,9 @@ while RUNNING:
     pygame.draw.circle(screen, CURSORCOLOUR, mouse_pos, CURSORRADIUS, 2) # red circle
     screen.blit(ballHero, ballHero_rect)
     for b in bullets.sprites(): screen.blit(b.image,b.rect)
+    myFont = pygame.font.SysFont("None", FONTSIZE)
+    screen.blit(myFont.render("Score: %i" %score, 0, LINECOLOUR), (SCREENSIZE.w-200,10))
     if STATS:
-        myFont = pygame.font.SysFont("None", FONTSIZE)
         screen.blit(myFont.render("FPS: %.2f    Mouse Pos: (%i,%i)" %(fps, corr_pos.x, corr_pos.y), 0, LINECOLOUR), (10,10))
     pygame.display.flip()
 
