@@ -110,23 +110,18 @@ class Bullet(pygame.sprite.Sprite):
 
     def Collision(self,other):
         self.colliding = True
-        dx = self.pos[0] - other.pos[0]
-        dy = self.pos[1] - other.pos[1]
-        n_scale = 1./self.Magnitude([dx,dy])
-        norm = (n_scale*dx,n_scale*dy)
-        neg_norm = self.MultiplyVector(norm,-1.)
+        normal12 = self.AddVector(other.pos,self.MultiplyVector(self.pos,-1.))
+        n_scale = 1./self.Magnitude(normal12)
+        normal12 = self.MultiplyVector(normal12,n_scale)
 
-        v_self_dot = self.DotProduct(self.velocity,neg_norm)
-        v_other_dot = self.DotProduct(other.velocity,norm)
-        v_self = self.MultiplyVector(neg_norm,v_self_dot)
-        v_other = self.MultiplyVector(norm,v_other_dot)
+        v_self_dot = self.DotProduct(self.velocity,normal12)
+        v_other_dot = self.DotProduct(other.velocity,normal12)
+        v_self12 = self.MultiplyVector(normal12,v_self_dot)
+        v_other12 = self.MultiplyVector(normal12,v_other_dot)
 
-        v_self_tangent = self.AddVector(v_self,self.MultiplyVector(self.velocity,-1.))
-        v_other_tangent = self.AddVector(v_other,self.MultiplyVector(other.velocity,-1.))
+        v_self_tangent = self.AddVector(self.velocity, self.MultiplyVector(v_self12,-1.))
+        v_other_tangent = self.AddVector(other.velocity, self.MultiplyVector(v_other12,-1.))
 
-        self.collision_velocity = self.AddVector(v_self_tangent,v_other)
-#        other.velocity = self.AddVector(v_other_tangent,v_self)
-#        print "In Velocity 1 = ",self.velocity
-#        print "In Velocity 2 = ",other.velocity
-#        print "Out Velocity 1 = ",self.collision_velocity
+        v_newself12 = v_other12
+        self.collision_velocity = self.AddVector(v_newself12,v_self_tangent)
 
