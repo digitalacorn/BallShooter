@@ -15,34 +15,12 @@ class Bullets(pygame.sprite.Group):
         for sprite1 in self.sprites():
             for sprite2 in self.sprites():
                 if sprite1!=sprite2:
-                    diff_vec = self.AddVector(sprite1.pos,self.MultiplyVector(sprite2.pos,-1.))
-                    r = self.Magnitude(diff_vec)
-#                    if pygame.sprite.collide_circle(sprite1, sprite2):
+                    diff_vec = AddVector(sprite1.pos,MultiplyVector(sprite2.pos,-1.))
+                    r = Magnitude(diff_vec)
                     if r<(float(sprite1.radius)+float(sprite2.radius)):
                         sprite1.Collision(sprite2)
                     else: continue
                 else: continue
-
-    def Magnitude(self, vec):
-        square_sum=0.
-        root = 0
-        for x in vec:
-            square_sum+=math.pow(x,2)
-            root+=1
-        return math.pow(square_sum,1./root)
-
-    def AddVector(self,vec1,vec2):
-        add_vec = []
-        for element in zip(vec1,vec2):
-            add_vec.append(element[0]+element[1])
-        return add_vec
-
-    def MultiplyVector(self,vec,scale):
-        new_vec = []
-        for element in vec:
-            new_vec.append(element*scale)
-        return new_vec
-
 
 class Bullet(pygame.sprite.Sprite):
     screen_size = PixelSize(640,480)
@@ -82,46 +60,45 @@ class Bullet(pygame.sprite.Sprite):
         self.pos[1] = self.pos[1]+dy
         self.rect.center = tuple(self.pos)
 
-    def Magnitude(self, vec):
-        square_sum=0.
-        root = 0
-        for x in vec:
-            square_sum+=math.pow(x,2)
-            root+=1
-        return math.pow(square_sum,1./root)
-
-    def DotProduct(self, vec1, vec2):
-        dot_prod = 0.
-        for element in zip(vec1,vec2):
-            dot_prod += element[0]*element[1]
-        return dot_prod
-
-    def AddVector(self,vec1,vec2):
-        add_vec = []
-        for element in zip(vec1,vec2):
-            add_vec.append(element[0]+element[1])
-        return add_vec
-
-    def MultiplyVector(self,vec,scale):
-        new_vec = []
-        for element in vec:
-            new_vec.append(element*scale)
-        return new_vec
-
     def Collision(self,other):
         self.colliding = True
-        normal12 = self.AddVector(other.pos,self.MultiplyVector(self.pos,-1.))
-        n_scale = 1./self.Magnitude(normal12)
-        normal12 = self.MultiplyVector(normal12,n_scale)
+        normal12 = AddVector(other.pos,MultiplyVector(self.pos,-1.))
+        n_scale = 1./Magnitude(normal12)
+        normal12 = MultiplyVector(normal12,n_scale)
 
-        v_self_dot = self.DotProduct(self.velocity,normal12)
-        v_other_dot = self.DotProduct(other.velocity,normal12)
-        v_self12 = self.MultiplyVector(normal12,v_self_dot)
-        v_other12 = self.MultiplyVector(normal12,v_other_dot)
+        v_self_dot = DotProduct(self.velocity,normal12)
+        v_other_dot = DotProduct(other.velocity,normal12)
+        v_self12 = MultiplyVector(normal12,v_self_dot)
+        v_other12 = MultiplyVector(normal12,v_other_dot)
 
-        v_self_tangent = self.AddVector(self.velocity, self.MultiplyVector(v_self12,-1.))
-        v_other_tangent = self.AddVector(other.velocity, self.MultiplyVector(v_other12,-1.))
+        v_self_tangent = AddVector(self.velocity, MultiplyVector(v_self12,-1.))
+        v_other_tangent = AddVector(other.velocity, MultiplyVector(v_other12,-1.))
 
         v_newself12 = v_other12
-        self.collision_velocity = self.AddVector(v_newself12,v_self_tangent)
+        self.collision_velocity = AddVector(v_newself12,v_self_tangent)
 
+def Magnitude(vec):
+    square_sum=0.
+    root = 0
+    for x in vec:
+        square_sum+=math.pow(x,2)
+        root+=1
+    return math.pow(square_sum,1./root)
+
+def DotProduct(vec1, vec2):
+    dot_prod = 0.
+    for element in zip(vec1,vec2):
+        dot_prod += element[0]*element[1]
+    return dot_prod
+
+def AddVector(vec1,vec2):
+    add_vec = []
+    for element in zip(vec1,vec2):
+        add_vec.append(element[0]+element[1])
+    return add_vec
+
+def MultiplyVector(vec,scale):
+    new_vec = []
+    for element in vec:
+        new_vec.append(element*scale)
+    return new_vec

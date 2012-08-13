@@ -2,7 +2,7 @@ import os, sys, pygame
 import time
 import math
 from collections import namedtuple as ntuple
-from Bullets import Bullets,Bullet
+from Bullets import Bullets,Bullet,Magnitude
 
 #pygame.mixer.pre_init(44100, -16, 2, 2048) # setup mixer to avoid sound lag
 pygame.init()
@@ -33,7 +33,6 @@ score_time = 0
 ball_angle_prev = 0.
 ball_angle = 0.
 mouse_pos = PixelPos(0,0)
-#bullets = pygame.sprite.Group()
 bullets = Bullets()
 Bullet.screen_size = SCREENSIZE
 Bullet.speed = BULLETSPEED
@@ -46,6 +45,7 @@ ballHero_scaled = pygame.transform.scale( ball, HEROSIZE )
 ballHero = pygame.transform.rotate( ballHero_scaled, ball_angle )
 
 ballBullet_scaled = pygame.transform.scale( ball, BULLETSIZE )
+bullet_rect = ballBullet_scaled.get_rect()
 
 # Make the screen do a bit of screen behaviour set up.
 screen = pygame.display.set_mode(SCREENSIZE)
@@ -63,6 +63,10 @@ def CorrectPos(pos,origin):
         return relpos
 
 corr_pos = CorrectPos(mouse_pos,HEROORIGIN)
+
+aimbulletx = 0.
+aimbullety = 0.
+aimbullet_pos = PixelPos(0.,0.)
 
 while RUNNING:
     # limit the frame rate and calculate the real one
@@ -89,25 +93,54 @@ while RUNNING:
             corr_pos = CorrectPos(mouse_pos,HEROORIGIN)
             ball_angle_rad = math.atan2(float(corr_pos.y),float(corr_pos.x))
             ball_angle = math.degrees(ball_angle_rad)
+            aimbulletx = 0.5 * (HEROSIZE.w+BULLETSIZE.w) * math.cos(math.radians(ball_angle))
+            aimbullety = 0.5 * (HEROSIZE.w+BULLETSIZE.w) * math.sin(math.radians(ball_angle))
+            aimbullet_pos = PixelPos( (HEROORIGIN.x+aimbulletx), (HEROORIGIN.y-aimbullety) )
         elif evtType == pygame.MOUSEBUTTONDOWN:
             mouse_pos = PixelPos(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])
             bulletmouse_pos = CorrectPos(mouse_pos,BULLETORIGIN)
-            b = Bullet(ballBullet_scaled,BULLETORIGIN,bulletmouse_pos)
+            b = Bullet(ballBullet_scaled,aimbullet_pos,bulletmouse_pos)
             bullets.add(b)
             score_time=0
+
+    bullet_rect.center = ( aimbullet_pos )
 
     ballHero = pygame.transform.rotate( ballHero_scaled, ball_angle )
     ballHero_rect = ballHero.get_rect()
     ballHero_rect.center = HEROORIGIN
     bullets.update(milliseconds)
 
+    for b in bullets.sprites():
+        sprite_pos = PixelPos(*b.pos)
+        corr_sprite_pos = CorrectPos(sprite_pos,HEROORIGIN)
+        rad_dist = Magnitude(corr_sprite_pos)
+        if rad_dist<=(HEROSIZE.w/2.):
+            RUNNING=False
+        else: continue
+
     pygame.draw.circle(screen, CURSORCOLOUR, mouse_pos, CURSORRADIUS, 2) # red circle
     screen.blit(ballHero, ballHero_rect)
+    screen.blit(ballBullet_scaled, bullet_rect)
     for b in bullets.sprites(): screen.blit(b.image,b.rect)
     myFont = pygame.font.SysFont("None", FONTSIZE)
     screen.blit(myFont.render("Score: %i" %score, 0, LINECOLOUR), (SCREENSIZE.w-200,10))
     if STATS:
         screen.blit(myFont.render("FPS: %.2f    Mouse Pos: (%i,%i)" %(fps, corr_pos.x, corr_pos.y), 0, LINECOLOUR), (10,10))
+    pygame.display.flip()
+
+ENDSCREEN = True
+myFont = pygame.font.SysFont("None", FONTSIZE+30)
+while ENDSCREEN:
+    screen.fill(BKGCOLOUR)
+    for event in pygame.event.get():
+        evtType = event.type
+        if evtType == pygame.QUIT: ENDSCREEN = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE: ENDSCREEN = False
+            else: continue
+    score_surface = myFont.render("Final Score: %i" %score, 0, LINECOLOUR)
+    score_rect = score_surface.get_rect()
+    screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)))
     pygame.display.flip()
 
 sys.exit()
