@@ -29,6 +29,7 @@ BULLETSPEED = 0.2
 STATS = False
 
 score = 0
+current_score = 0
 score_time = 0
 ball_angle_prev = 0.
 ball_angle = 0.
@@ -73,7 +74,6 @@ while RUNNING:
     milliseconds = clock.tick(MAXFPS)
     seconds = milliseconds / 1000.0 # seconds passed since last frame
     score_time+=seconds
-    score+= score_time*math.pow(len(bullets.sprites()),2)
     fps = clock.get_fps()
     # clear the screen
     screen.fill(BKGCOLOUR)
@@ -101,6 +101,8 @@ while RUNNING:
             bulletmouse_pos = CorrectPos(mouse_pos,BULLETORIGIN)
             b = Bullet(ballBullet_scaled,aimbullet_pos,bulletmouse_pos)
             bullets.add(b)
+            if len(bullets.sprites())>1:
+                score+= score_time*math.pow(len(bullets.sprites()),3)
             score_time=0
 
     bullet_rect.center = ( aimbullet_pos )
@@ -123,7 +125,8 @@ while RUNNING:
     screen.blit(ballBullet_scaled, bullet_rect)
     for b in bullets.sprites(): screen.blit(b.image,b.rect)
     myFont = pygame.font.SysFont("None", FONTSIZE)
-    screen.blit(myFont.render("Score: %i" %score, 0, LINECOLOUR), (SCREENSIZE.w-200,10))
+    current_score = score+(score_time*math.pow(len(bullets.sprites()),3))
+    screen.blit(myFont.render("Score: %i" %current_score, 0, LINECOLOUR), (SCREENSIZE.w-200,10))
     if STATS:
         screen.blit(myFont.render("FPS: %.2f    Mouse Pos: (%i,%i)" %(fps, corr_pos.x, corr_pos.y), 0, LINECOLOUR), (10,10))
     pygame.display.flip()
@@ -138,9 +141,10 @@ while ENDSCREEN:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE: ENDSCREEN = False
             else: continue
-    score_surface = myFont.render("Final Score: %i" %score, 0, LINECOLOUR)
+    score_surface = myFont.render("Final Score: %i" %current_score, 0, LINECOLOUR)
     score_rect = score_surface.get_rect()
     screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)))
     pygame.display.flip()
 
-sys.exit()
+pygame.quit()
+#sys.exit()
