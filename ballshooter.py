@@ -27,6 +27,7 @@ MAXFPS = 100
 FONTSIZE = 16
 BULLETSPEED = 0.2
 STATS = False
+powerball = 2.5
 
 score = 0
 current_score = 0
@@ -102,7 +103,7 @@ while RUNNING:
             b = Bullet(ballBullet_scaled,aimbullet_pos,bulletmouse_pos)
             bullets.add(b)
             if len(bullets.sprites())>1:
-                score+= score_time*math.pow(len(bullets.sprites()),3)
+                score+= score_time*math.pow(len(bullets.sprites()),powerball)
             score_time=0
 
     bullet_rect.center = ( aimbullet_pos )
@@ -125,7 +126,7 @@ while RUNNING:
     screen.blit(ballBullet_scaled, bullet_rect)
     for b in bullets.sprites(): screen.blit(b.image,b.rect)
     myFont = pygame.font.SysFont("None", FONTSIZE)
-    current_score = score+(score_time*math.pow(len(bullets.sprites()),3))
+    current_score = score+(score_time*math.pow(len(bullets.sprites()),powerball))
     screen.blit(myFont.render("Score: %i" %current_score, 0, LINECOLOUR), (SCREENSIZE.w-200,10))
     if STATS:
         screen.blit(myFont.render("FPS: %.2f    Mouse Pos: (%i,%i)" %(fps, corr_pos.x, corr_pos.y), 0, LINECOLOUR), (10,10))
