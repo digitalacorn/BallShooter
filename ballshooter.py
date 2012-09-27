@@ -1,8 +1,19 @@
+STARTSCREEN = "true"
+
+
 import os, sys, pygame
 import time
 import math
 from collections import namedtuple as ntuple
 from Bullets import Bullets,Bullet,Magnitude
+
+try:
+    f = open("scores.txt", "r")
+    scores = f.readlines()
+    scores = [int(s) for s in scores]
+    f.close()
+except:
+    scores = []
 
 #pygame.mixer.pre_init(44100, -16, 2, 2048) # setup mixer to avoid sound lag
 pygame.init()
@@ -13,20 +24,20 @@ PixelSize = ntuple('PixelSize', 'w h')
 RGB = ntuple('RGB', 'r g b')
 
 # initialize some global varables with magic numbers
-SCREENSIZE = PixelSize(640, 480)
+SCREENSIZE = PixelSize(1000,800)
 #SCREENSIZE = PixelSize(200, 150)
-HEROSIZE = PixelSize(75,75)
-BULLETSIZE = PixelSize(20,20)
-CURSORRADIUS = BULLETSIZE.h/2
+HEROSIZE = PixelSize(70,70)
+BULLETSIZE = PixelSize(12,12)
+CURSORRADIUS = BULLETSIZE.h/1
 HEROORIGIN = PixelPos(SCREENSIZE.w/2,SCREENSIZE.h)
 BULLETORIGIN = PixelPos(HEROORIGIN.x,HEROORIGIN.y-BULLETSIZE.h/2)
 BKGCOLOUR = RGB(0, 0, 0)
 LINECOLOUR = RGB(20, 200, 20)
-CURSORCOLOUR = RGB(255, 0, 0)
+CURSORCOLOUR = RGB(100, 0, 0)
 MAXFPS = 100
-FONTSIZE = 16
-BULLETSPEED = 0.2
-STATS = False
+FONTSIZE = 20
+BULLETSPEED = 0.1111
+STATS = True
 powerball = 2.5
 
 score = 0
@@ -70,6 +81,32 @@ aimbulletx = 0.
 aimbullety = 0.
 aimbullet_pos = PixelPos(0.,0.)
 
+timer = 0.0
+while STARTSCREEN:
+    milliseconds = clock.tick(MAXFPS)
+    timer += milliseconds
+    screen.fill(BKGCOLOUR)
+    myFont = pygame.font.SysFont("None", FONTSIZE)
+    score_surface = myFont.render("BALLSHOOTER! click to continue", 0, LINECOLOUR)
+    score_rect = score_surface.get_rect()
+    screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)))
+    pygame.draw.circle(screen, CURSORCOLOUR, mouse_pos, 4, 2)
+    #if (timer>10000):
+    #    break;
+    for event in pygame.event.get():
+        evtType = event.type
+        if evtType == pygame.MOUSEBUTTONDOWN:
+            STARTSCREEN = False
+        elif evtType == pygame.MOUSEMOTION:
+            mouse_pos = PixelPos(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1])
+            corr_pos = CorrectPos(mouse_pos,HEROORIGIN)
+            ball_angle_rad = math.atan2(float(corr_pos.y),float(corr_pos.x))
+            ball_angle = math.degrees(ball_angle_rad)
+            aimbulletx = 0.5 * (HEROSIZE.w+BULLETSIZE.w) * math.cos(math.radians(ball_angle))
+            aimbullety = 0.5 * (HEROSIZE.w+BULLETSIZE.w) * math.sin(math.radians(ball_angle))
+            aimbullet_pos = PixelPos( (HEROORIGIN.x+aimbulletx), (HEROORIGIN.y-aimbullety) )
+    pygame.display.flip()
+
 while RUNNING:
     # limit the frame rate and calculate the real one
     milliseconds = clock.tick(MAXFPS)
@@ -78,6 +115,7 @@ while RUNNING:
     fps = clock.get_fps()
     # clear the screen
     screen.fill(BKGCOLOUR)
+
     # check for user inputs
     for event in pygame.event.get():
         evtType = event.type
@@ -132,10 +170,18 @@ while RUNNING:
         screen.blit(myFont.render("FPS: %.2f    Mouse Pos: (%i,%i)" %(fps, corr_pos.x, corr_pos.y), 0, LINECOLOUR), (10,10))
     pygame.display.flip()
 
+current_high_score = 0
+for score in scores:
+    if score > current_high_score:
+        current_high_score = score
+
+
 ENDSCREEN = True
 myFont = pygame.font.SysFont("None", FONTSIZE+30)
+timer = 0
 while ENDSCREEN:
     screen.fill(BKGCOLOUR)
+    timer += 1
     for event in pygame.event.get():
         evtType = event.type
         if evtType == pygame.QUIT: ENDSCREEN = False
@@ -145,7 +191,50 @@ while ENDSCREEN:
     score_surface = myFont.render("Final Score: %i" %current_score, 0, LINECOLOUR)
     score_rect = score_surface.get_rect()
     screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)))
+    if current_score<current_high_score:
+        score_surface = myFont.render("High Score: %i" %current_high_score, 0, LINECOLOUR)
+        score_rect = score_surface.get_rect()
+        screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)+60))
+    else:
+        if (timer/50)%2 == 0:
+            score_surface = myFont.render("NEW HIGH SCORE: %i"%(current_score), 0, LINECOLOUR)
+            score_rect = score_surface.get_rect()
+            screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)+60))
+
     pygame.display.flip()
+
+
+
+
+scores.append(current_score)
+
+print "BIGGESTSCORE", int(current_score)
+
+f = open("scores.txt", "w")
+for s in scores:
+    f.write(str(int(s))+"\n")
+f.close()
+SCORESCREEN = True
+while SCORESCREEN :
+
+    score_surface = myFont.render("NEW HIGH SCORE: %i"%(current_score), 0, LINECOLOUR)
+    score_rect = score_surface.get_rect()
+    screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)+60))
+    timer += 1
+    for event in pygame.event.get():
+        evtType = event.type
+        if evtType == pygame.QUIT: SCORESCREEN = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE: SCORESCREEN = False
+            else: continue
+    pygame.display.flip()
+
+
+
+
+
+
 
 pygame.quit()
 #sys.exit()
+    
