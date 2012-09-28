@@ -33,10 +33,10 @@ HEROORIGIN = PixelPos(SCREENSIZE.w/2,SCREENSIZE.h)
 BULLETORIGIN = PixelPos(HEROORIGIN.x,HEROORIGIN.y-BULLETSIZE.h/2)
 BKGCOLOUR = RGB(0, 0, 0)
 LINECOLOUR = RGB(20, 200, 20)
-CURSORCOLOUR = RGB(100, 0, 0)
+CURSORCOLOUR = RGB(255, 255, 0)
 MAXFPS = 100
 FONTSIZE = 20
-BULLETSPEED = 0.1111
+BULLETSPEED = 0.8
 STATS = True
 powerball = 2.5
 
@@ -90,7 +90,7 @@ while STARTSCREEN:
     score_surface = myFont.render("BALLSHOOTER! click to continue", 0, LINECOLOUR)
     score_rect = score_surface.get_rect()
     screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)))
-    pygame.draw.circle(screen, CURSORCOLOUR, mouse_pos, 4, 2)
+    pygame.draw.circle(screen, CURSORCOLOUR, mouse_pos, CURSORRADIUS, 2)
     #if (timer>10000):
     #    break;
     for event in pygame.event.get():
