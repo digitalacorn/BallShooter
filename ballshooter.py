@@ -210,25 +210,37 @@ scores.append(current_score)
 
 print "BIGGESTSCORE", int(current_score)
 
+SCORESCREEN = True
+while SCORESCREEN:
+	screen.fill(BKGCOLOUR)
+	pos = 1
+	surfi = []
+	dims = (0,0)
+	so = sorted(scores)
+	so.reverse()
+	for score in so[:10]:	
+		score_surface = myFont.render("rank:%i score:%i"%(pos, score), 0, LINECOLOUR)
+		surfi.append(score_surface)
+		dims = (max(score_rect.width,dims[0]),score_rect.height+dims[1] )
+		pos+=1
+	x,y =  ((SCREENSIZE.w/2)-(dims[0]/2),(SCREENSIZE.h/2)-(dims[1]/2))
+	for surface in surfi:		
+		score_rect = surface.get_rect()
+		screen.blit(surface,(x,y))
+		y+=score_rect.height
+	timer += 1
+	for event in pygame.event.get():
+		evtType = event.type
+		if evtType == pygame.QUIT: SCORESCREEN = False
+		elif event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_ESCAPE: SCORESCREEN = False
+			else: continue
+	pygame.display.flip()
+
 f = open("scores.txt", "w")
 for s in scores:
-    f.write(str(int(s))+"\n")
+	f.write(str(int(s))+"\n")
 f.close()
-SCORESCREEN = True
-while SCORESCREEN :
-
-    score_surface = myFont.render("NEW HIGH SCORE: %i"%(current_score), 0, LINECOLOUR)
-    score_rect = score_surface.get_rect()
-    screen.blit(score_surface, ((SCREENSIZE.w/2)-(score_rect.width/2),(SCREENSIZE.h/2)-(score_rect.height/2)+60))
-    timer += 1
-    for event in pygame.event.get():
-        evtType = event.type
-        if evtType == pygame.QUIT: SCORESCREEN = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE: SCORESCREEN = False
-            else: continue
-    pygame.display.flip()
-
 
 
 
@@ -237,4 +249,4 @@ while SCORESCREEN :
 
 pygame.quit()
 #sys.exit()
-    
+	
